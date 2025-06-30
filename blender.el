@@ -30,7 +30,8 @@ Use `wslpath` if using WSL and pointing to a Windows path."
   :group 'blender)
 
 (defcustom blender-bridge-script
-  (expand-file-name "blender-emacs_bridge.py" (file-name-directory (or load-file-name buffer-file-name)))
+  (let ((base-dir (file-name-directory (or load-file-name (buffer-file-name)))))
+    (expand-file-name "blender_emacs_bridge.py" base-dir))
   "Path to the Python bridge script for Blender."
   :type 'file
   :group 'blender)
