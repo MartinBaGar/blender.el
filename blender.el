@@ -203,24 +203,24 @@ run in external Python environment."
 ;; Optional: Add to python-mode-hook for automatic setup
 ;; (add-hook 'python-mode-hook 'blender-setup-auto-reload)
 
-;; Key bindings (optional - users can customize)
+;; Define minor mode and keymap
 (defvar blender-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c b s") 'blender-start)
-    (define-key map (kbd "C-c b r") 'blender-run-current-buffer)
-    (define-key map (kbd "C-c b e") 'blender-run-current-buffer-external)
-    (define-key map (kbd "C-c b l") 'blender-reload-addon)
-    (define-key map (kbd "C-c b a") 'blender-set-addon)
-    (define-key map (kbd "C-c b q") 'blender-stop)
-    (define-key map (kbd "C-c b c") 'blender-show-config)
-    (define-key map (kbd "C-c b v") 'blender-eval)
-    (define-key map (kbd "C-c b d") 'blender-set-default-addon-from-buffer)
+    (define-key map (kbd "C-c C-b s") 'blender-start)
+    (define-key map (kbd "C-c C-b r") 'blender-run-current-buffer)
+    (define-key map (kbd "C-c C-b e") 'blender-run-current-buffer-external)
+    (define-key map (kbd "C-c C-b l") 'blender-reload-addon)
+    (define-key map (kbd "C-c C-b a") 'blender-set-addon)
+    (define-key map (kbd "C-c C-b q") 'blender-stop)
+    (define-key map (kbd "C-c C-b c") 'blender-show-config)
+    (define-key map (kbd "C-c C-b v") 'blender-eval)
+    (define-key map (kbd "C-c C-b d") 'blender-set-default-addon-from-buffer)
     map)
-  "Keymap for Blender development commands.")
+  "Keymap for `blender-mode'.")
 
 (define-minor-mode blender-mode
-  "Minor mode for Blender addon development."
-  :lighter " Blender"
+  "Minor mode for interacting with Blender."
+  :lighter " 🧃"
   :keymap blender-mode-map)
 
 (provide 'blender)
