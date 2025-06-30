@@ -1,1 +1,0 @@
-/mnt/c/Users/martb/Documents/Blender/blender_emacs_bridge.py

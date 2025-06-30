@@ -1,0 +1,20 @@
+#+title: README
+
+* blender.el
+
+Control Blender from Emacs.
+
+** Features
+- Send Python code from Emacs buffers to Blender.
+- Connect to a running Blender instance via socket or pipe.
+- Automate tasks like rendering, scripting, etc.
+
+** Installation
+Use MELPA or clone manually:
+#+BEGIN_SRC elisp
+(use-package blender
+  :load-path "/path/to/blender.el")
+#+END_SRC
+
+** Usage
+Run `M-x blender-start` or bind your own keys.
