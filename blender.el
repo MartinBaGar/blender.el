@@ -72,7 +72,7 @@ Set to nil to use only Blender's Python."
   (interactive)
   (when (process-live-p blender-process)
     (message "Blender is already running.")
-    (return))
+    (cl-return))
   (setq blender-process
         (apply #'start-process
                "blender"
@@ -85,14 +85,14 @@ Set to nil to use only Blender's Python."
 
 
 (defun blender-send-command (json-string)
-  "Send a raw JSON string to the running Blender process."
+  "Send a raw JSON-STRING to the running Blender process."
   (interactive "sJSON Command: ")
   (unless (process-live-p blender-process)
     (error "Blender process is not running. Use M-x blender-start first"))
   (process-send-string blender-process (concat json-string "\n")))
 
 (defun blender-convert-path (path)
-  "Convert WSL path to Windows path using wslpath."
+  "Convert WSL PATH to WINDOWS PATH using wslpath."
   (let* ((wsl-path (expand-file-name path))
          (windows-path (string-trim
                         (shell-command-to-string
@@ -101,7 +101,7 @@ Set to nil to use only Blender's Python."
 
 (defun blender-run-file (path &optional external)
   "Send a command to Blender to run a Python file at PATH.
-If EXTERNAL is non-nil and blender-external-python is set, 
+If EXTERNAL is non-nil and BLENDER-EXTERNAL-PYTHON is set,
 run in external Python environment."
   (interactive "fScript to run in Blender: ")
   (let ((windows-path (blender-convert-path path)))
@@ -126,7 +126,7 @@ run in external Python environment."
   "Save and run the current buffer in external Python environment."
   (interactive)
   (unless blender-external-python
-    (error "blender-external-python is not set. Configure it first"))
+    (error "Blender-external-python is not set. Configure it first"))
   (when buffer-file-name
     (save-buffer)
     (blender-run-file buffer-file-name t)))
@@ -141,7 +141,7 @@ run in external Python environment."
                   ("addon" . ,blender-current-addon)))))
 
 (defun blender-set-default-addon-from-buffer ()
-  "Set `blender-default-addon` to the name of the current buffer's parent directory."
+  "Set BLENDER-DEFAULT-ADDON to the name of the current buffer's parent directory."
   (interactive)
   (when buffer-file-name
     (let* ((dir (file-name-directory buffer-file-name))
@@ -150,7 +150,7 @@ run in external Python environment."
       (message "blender-default-addon set to: %s" blender-default-addon))))
 
 (defun blender-set-addon (name)
-  "Set the active addon name for development and reloading."
+  "Set the active addon NAME for development and reloading."
   (interactive "sAddon name: ")
   (setq blender-current-addon name)
   (blender-send-command
@@ -166,7 +166,7 @@ run in external Python environment."
     (blender-reload-addon)))
 
 (defun blender-eval (expression)
-  "Evaluate a Python expression in Blender and show result."
+  "Evaluate a Python EXPRESSION in Blender and show result."
   (interactive "sExpression: ")
   (blender-send-command
    (json-encode `(("cmd" . "eval")
@@ -195,7 +195,7 @@ run in external Python environment."
 ;; Auto-reload setup for addon files
 (defun blender-setup-auto-reload ()
   "Set up auto-reload for addon files in the current buffer."
-  (when (and buffer-file-name 
+  (when (and buffer-file-name
              (string-match-p (regexp-quote blender-addon-directory) buffer-file-name))
     (add-hook 'after-save-hook 'blender-reload-addon nil t)
     (message "Auto-reload enabled for this addon file")))
