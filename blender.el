@@ -14,8 +14,6 @@
 ;; control the Blender Python environment, and automate workflows.
 
 ;;; Code:
-(provide 'blender)
-
 (defgroup blender nil
   "Blender development integration for Emacs."
   :group 'tools
