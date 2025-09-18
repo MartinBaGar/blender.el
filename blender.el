@@ -94,6 +94,7 @@ Optionally injecting external Python site-packages."
 (defun blender-start ()
   "Start Blender with bridge and optional external Python injection."
   (interactive)
+  ;; check
   (if (process-live-p blender-process)
       (message "Blender is already running")
     (progn
