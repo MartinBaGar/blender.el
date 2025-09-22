@@ -82,11 +82,16 @@ Optionally injecting external Python site-packages."
           (when blender-external-python
             (string-trim
              (shell-command-to-string
-              (format "\"%s\" -c \"import site; print([p for p in site.getsitepackages() if 'site-packages' in p][0])\"" blender-external-python)))))
+              (format "\"%s\" -c \"import site; print([p for p in site.getsitepackages() if 'site-packages' in p][0])\""
+                      blender-external-python)))))
+
+         (paths (if external-lib
+                    (list blender-addon-directory external-lib)
+                  (list blender-addon-directory)))
+
          (python-expr
-          (when external-lib
-            (format "import sys; sys.path.extend([r'%s', r'%s'])"
-                    external-lib blender-addon-directory))))
+          (format "import sys; sys.path.extend([%s])"
+                  (mapconcat #'prin1-to-string paths ", "))))
     (append
      (when python-expr (list "--python-expr" python-expr))
      (list "--python" (blender-convert-path blender-bridge-script)
