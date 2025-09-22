@@ -44,7 +44,7 @@ Set to nil to use only Blender's Python."
   :group 'blender)
 
 (defcustom blender-addon-directory nil
-  "Absolute path to the directory containing your addons.
+  "Absolute path to the directory containing your add-on.
 Required for starting Blender from within Emacs.
 Use `wslpath` if using WSL and pointing to a Windows path."
   :type 'directory
@@ -59,7 +59,7 @@ Use `wslpath` if using WSL and pointing to a Windows path."
   "The Blender process handle.")
 
 (defvar blender-current-addon nil
-  "Currently active addon name.")
+  "Currently active add-on name.")
 
 (defun blender-convert-path (path)
   "Convert WSL PATH to WINDOWS PATH using wslpath."
@@ -77,15 +77,16 @@ Optionally injecting external Python site-packages."
   (unless blender-executable
     (user-error "`blender-executable` is not set. Please customize it"))
 
+
   (let* ((external-lib
           (when blender-external-python
             (string-trim
              (shell-command-to-string
-              (format "\"%s\" -c \"import site; print([p for p in site.getsitepackages() if 'site-packages' in p][0])\""
-                      blender-external-python)))))
+              (format "\"%s\" -c \"import site; print([p for p in site.getsitepackages() if 'site-packages' in p][0])\"" blender-external-python)))))
          (python-expr
           (when external-lib
-            (format "import sys; sys.path.append(r'%s')" external-lib))))
+            (format "import sys; sys.path.extend([r'%s', r'%s'])"
+                    external-lib blender-addon-directory))))
     (append
      (when python-expr (list "--python-expr" python-expr))
      (list "--python" (blender-convert-path blender-bridge-script)
@@ -96,6 +97,7 @@ Optionally injecting external Python site-packages."
   (interactive)
   (if (process-live-p blender-process)
       (message "Blender is already running")
+
     (progn
       (message "Starting Blender...")
       (setq blender-process
