@@ -7,8 +7,6 @@ import bpy
 
 from typing import TypedDict, NotRequired, cast
 
-print(sys.path)
-print(sys.executable)
 # === CONFIGURATION ===
 default_addon: str = ""
 if "--" in sys.argv:
@@ -28,7 +26,7 @@ class Command(TypedDict):
 # Try to enable the add-on
 try:
     bpy.ops.preferences.addon_enable(module=default_addon)
-    print(f"Adorn '{default_addon}' enabled.", flush=True)
+    print(f"Add-on '{default_addon}' enabled.", flush=True)
 except Exception as e:
     print(f"Failed to enable add-on '{default_addon}': {e}", flush=True)
 
