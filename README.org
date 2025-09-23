@@ -17,4 +17,11 @@ Use MELPA or clone manually:
 #+END_SRC
 
 ** Usage
+
 Run `M-x blender-start` or bind your own keys.
+
+* TODO
+- [ ] Change add-on directory when changing a loaded add-on that is not present in the currently set =blender-addon-directory=
+- [ ] Debugging ?
+- [ ] Automatically reload the plugin when changing =blender-current-addon= with =blender-set-addon= ?
+- [ ] Allow to run start Blender without any add-on

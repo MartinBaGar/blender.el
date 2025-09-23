@@ -7,12 +7,15 @@ import bpy
 
 from typing import TypedDict, NotRequired, cast
 
+print('Bridge script starting...', flush=True)
+
 # === CONFIGURATION ===
-default_addon: str = ""
+default_addon: str = ""  # Initialize as empty string
 if "--" in sys.argv:
     idx = sys.argv.index("--")
     if len(sys.argv) > idx + 1:
         default_addon = sys.argv[idx + 1]
+        print(f"Default addon set from command line: {default_addon}", flush=True)
 # ======================
 
 class Command(TypedDict):
@@ -23,12 +26,15 @@ class Command(TypedDict):
     addon: str
     name: str
 
-# Try to enable the add-on
-try:
-    bpy.ops.preferences.addon_enable(module=default_addon)
-    print(f"Add-on '{default_addon}' enabled.", flush=True)
-except Exception as e:
-    print(f"Failed to enable add-on '{default_addon}': {e}", flush=True)
+# Try to enable the add-on only if we have a default addon
+if default_addon:
+    try:
+        bpy.ops.preferences.addon_enable(module=default_addon)
+        print(f"Add-on '{default_addon}' enabled.", flush=True)
+    except Exception as e:
+        print(f"Failed to enable add-on '{default_addon}': {e}", flush=True)
+else:
+    print("No default addon specified - skipping addon enable", flush=True)
 
 def run_external_python(script_path: str, python_env: str):
     """Run a Python script in an external Python environment."""
@@ -52,40 +58,6 @@ def run_external_python(script_path: str, python_env: str):
         print(f"Python executable not found: {python_env}", flush=True)
     except Exception as e:
         print(f"Error running external script: {e}", flush=True)
-
-# def evaluate_expression(expr: str):
-#     """Safely evaluate a Python expression and return the result."""
-#     try:
-#         # Create a safe namespace with common Blender modules
-#         namespace = {
-#             'bpy': bpy,
-#             'bmesh': None,  # Import on demand
-#             'mathutils': None,  # Import on demand
-#         }
-
-#         # Try to import common modules on demand
-#         try:
-#             import bmesh
-#             namespace['bmesh'] = bmesh
-#         except ImportError:
-#             pass
-
-#         try:
-#             from mathutils import Vector, Matrix, Euler
-#             namespace['mathutils'] = sys.modules['mathutils']
-#             namespace['Vector'] = Vector
-#             namespace['Matrix'] = Matrix
-#             namespace['Euler'] = Euler
-#         except ImportError:
-#             pass
-
-#         # Evaluate the expression
-#         result = eval(expr, {"__builtins__": {}}, namespace)
-#         print(f"Eval result: {result}", flush=True)
-#         return result
-#     except Exception as e:
-#         print(f"Eval error: {e}", flush=True)
-#         return None
 
 def reload_addon_modules(addon_name: str) -> bool:
     """Reload all modules related to an add-on."""
@@ -153,6 +125,10 @@ def emacs_bridge():
 
             elif command == "reload_addon":
                 addon_name = cmd.get("addon", default_addon)
+                if not addon_name:
+                    print("Error: No addon specified for reload and no default addon set", flush=True)
+                    continue
+
                 try:
                     # Disable add-on first
                     bpy.ops.preferences.addon_disable(module=addon_name)
@@ -174,11 +150,8 @@ def emacs_bridge():
                 if new_name:
                     default_addon = new_name
                     print(f"Active addon set to: {default_addon}", flush=True)
-
-            # elif command == "eval":
-            #     expression = cmd.get("expr")
-            #     if expression:
-            #         evaluate_expression(expression)
+                else:
+                    print("Error: No addon name provided for set_addon command", flush=True)
 
             else:
                 print(f"Unknown command: {command}", flush=True)

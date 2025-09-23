@@ -50,7 +50,7 @@ Use `wslpath` if using WSL and pointing to a Windows path."
   :type 'directory
   :group 'blender)
 
-(defcustom blender-default-addon "test"
+(defcustom blender-default-addon nil
   "Default addon name for development."
   :type 'string
   :group 'blender)
@@ -72,11 +72,8 @@ Use `wslpath` if using WSL and pointing to a Windows path."
 (defun blender-build-startup-args ()
   "Construct Blender startup arguments.
 Optionally injecting external Python site-packages."
-  (unless blender-addon-directory
-    (user-error "`blender-addon-directory` is not set. Please customize it"))
   (unless blender-executable
     (user-error "`blender-executable` is not set. Please customize it"))
-
 
   (let* ((external-lib
           (when blender-external-python
@@ -85,24 +82,31 @@ Optionally injecting external Python site-packages."
               (format "\"%s\" -c \"import site; print([p for p in site.getsitepackages() if 'site-packages' in p][0])\""
                       blender-external-python)))))
 
-         (paths (if external-lib
+         (paths
+          (when (or blender-addon-directory external-lib)
+            (if external-lib
+                (if blender-addon-directory
                     (list blender-addon-directory external-lib)
-                  (list blender-addon-directory)))
+                  (list external-lib))
+              (list blender-addon-directory))))
 
          (python-expr
-          (format "import sys; sys.path.extend([%s])"
-                  (mapconcat #'prin1-to-string paths ", "))))
+          (when paths
+            (format "import sys; sys.path.extend([%s])"
+                    (mapconcat #'prin1-to-string paths ", ")))))
+
     (append
      (when python-expr (list "--python-expr" python-expr))
-     (list "--python" (blender-convert-path blender-bridge-script)
-           "--" blender-default-addon))))
+     (list "--python" (blender-convert-path blender-bridge-script))
+     ;; Only pass default addon if it's set
+     (when (and blender-default-addon (not (string-empty-p blender-default-addon)))
+       (list "--" blender-default-addon)))))
 
 (defun blender-start ()
   "Start Blender with bridge and optional external Python injection."
   (interactive)
   (if (process-live-p blender-process)
       (message "Blender is already running")
-
     (progn
       (message "Starting Blender...")
       (setq blender-process
@@ -112,9 +116,11 @@ Optionally injecting external Python site-packages."
                    blender-executable
                    (blender-build-startup-args)))
       (set-process-query-on-exit-flag blender-process nil)
-      (setq blender-current-addon blender-default-addon)
-      (message "Blender launched with bridge. Current addon: %s" blender-current-addon))))
-
+      ;; Set current addon to default if available
+      (when (and blender-default-addon (not (string-empty-p blender-default-addon)))
+        (setq blender-current-addon blender-default-addon))
+      (message "Blender launched with bridge. Current addon: %s"
+               (or blender-current-addon "None")))))
 
 (defun blender-send-command (json-string)
   "Send a raw JSON-STRING to the running Blender process."
@@ -158,11 +164,12 @@ run in external Python environment."
 (defun blender-reload-addon ()
   "Reload the current addon by disabling and re-enabling it."
   (interactive)
-  (unless blender-current-addon
-    (error "No current addon set. Use blender-set-addon first"))
-  (blender-send-command
-   (json-encode `(("cmd" . "reload_addon")
-                  ("addon" . ,blender-current-addon)))))
+  (let ((addon-to-reload (or blender-current-addon blender-default-addon)))
+    (unless addon-to-reload
+      (error "No current addon set. Use blender-set-addon first or set blender-default-addon"))
+    (blender-send-command
+     (json-encode `(("cmd" . "reload_addon")
+                    ("addon" . ,addon-to-reload))))))
 
 (defun blender-set-default-addon-from-buffer ()
   "Set BLENDER-DEFAULT-ADDON to the name of the current buffer's parent directory."
