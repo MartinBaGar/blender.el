@@ -119,6 +119,7 @@ Optionally injecting external Python site-packages."
       ;; Set current addon to default if available
       (when (and blender-default-addon (not (string-empty-p blender-default-addon)))
         (setq blender-current-addon blender-default-addon))
+      (blender-mode 1)
       (message "Blender launched with bridge. Current addon: %s"
                (or blender-current-addon "None")))))
 
@@ -209,6 +210,7 @@ run in external Python environment."
   (when (process-live-p blender-process)
     (kill-process blender-process)
     (setq blender-current-addon nil)
+    (blender-mode -1)
     (message "Blender stopped.")))
 
 (defun blender-show-config ()
@@ -231,8 +233,42 @@ run in external Python environment."
     (add-hook 'after-save-hook 'blender-reload-addon nil t)
     (message "Auto-reload enabled for this addon file")))
 
-;; Optional: Add to python-mode-hook for automatic setup
-;; (add-hook 'python-mode-hook 'blender-setup-auto-reload)
+(defvar blender-popup-window nil)
+(defvar blender-popup-height 0.3
+  "Height ratio for blender popup window.")
+
+(defun blender-toggle-popup ()
+  "Toggle blender buffer as popup."
+  (interactive)
+  (if (blender-popup-visible-p)
+      (blender-dismiss-popup)
+    (blender-show-popup)))
+
+(defun blender-show-popup ()
+  "Show blender buffer as popup."
+  (let ((buffer (cond
+                 ((and blender-process (process-live-p blender-process))
+                  (process-buffer blender-process))
+                 (t nil))))
+    (if buffer
+        (setq blender-popup-window
+              (display-buffer buffer
+                              `((display-buffer-at-bottom)
+                                (window-height . 0.3)
+                                (dedicated . t))))
+      (message "Blender is not running. Start it with `blender-start`."))))
+
+(defun blender-dismiss-popup ()
+  "Dismiss the blender popup window."
+  (interactive)
+  (when (blender-popup-visible-p)
+    (delete-window blender-popup-window)
+    (setq blender-popup-window nil)))
+
+(defun blender-popup-visible-p ()
+  "Check if blender popup is currently visible."
+  (and blender-popup-window
+       (window-live-p blender-popup-window)))
 
 ;; Define minor mode and keymap
 (defvar blender-mode-map
@@ -246,6 +282,10 @@ run in external Python environment."
     (define-key map (kbd "C-c C-b c") 'blender-show-config)
     (define-key map (kbd "C-c C-b v") 'blender-eval)
     (define-key map (kbd "C-c C-b d") 'blender-set-default-addon-from-buffer)
+    (define-key map (kbd "C-c C-b p") 'blender-toggle-popup) ; Add popup toggle
+    ;; Process buffer specific keys (only active when in *blender* buffer)
+    (define-key map (kbd "q") 'blender-dismiss-popup)
+    (define-key map (kbd "C-g") 'blender-dismiss-popup)
     map)
   "Keymap for `blender-mode'.")
 
